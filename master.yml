@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Master template to deploy EC2 and RDS resources.
+
+Resources:
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "file://${LocalPath}/ec2.yaml"
+      Parameters:
+        KeyName: !Ref KeyName
+        InstanceType: !Ref InstanceType
+
+Parameters:
+  LocalPath:
+    Description: The local path where the nested stack templates are stored.
+    Type: String
+
+  KeyName:
+    Description: EC2 KeyPair Name
+    Type: AWS::EC2::KeyPair::KeyName
+
+  InstanceType:
+    Description: EC2 Instance Type
+    Type: String
+    Default: "t3.micro"
+
+
+Outputs:
+  EC2StackOutput:
+    Description: "The Stack ID of the EC2 stack"
+    Value: !Ref EC2Stack
