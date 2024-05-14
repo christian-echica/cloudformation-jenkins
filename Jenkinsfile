@@ -8,8 +8,13 @@ pipeline {
         stage('Fetch Parameters') {
             steps {
                 script {
-                    // Fetching all parameters including stack name and region
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding', 
+                        credentialsId: 'aws-creds', 
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
+                        // Fetching all parameters including stack name and region
                         env.REGION = sh(script: "aws ssm get-parameter --name 'Region' --with-decryption --query 'Parameter.Value' --output text", returnStdout: true).trim()
                         env.STACK_NAME = sh(script: "aws ssm get-parameter --name 'StackName' --with-decryption --query 'Parameter.Value' --output text", returnStdout: true).trim()
                         env.KEY_NAME = sh(script: "aws ssm get-parameter --name 'KeyName' --with-decryption --query 'Parameter.Value' --output text", returnStdout: true).trim()
@@ -24,30 +29,25 @@ pipeline {
         stage('Deploy Master Stack') {
             steps {
                 script {
-                    // Build the full path to the master template file
-                    def templatePath = "${WORKSPACE}/master.yaml"
-                    // Check if the stack exists
-                    def checkStack = sh(script: "aws cloudformation describe-stacks --stack-name ${env.STACK_NAME} --region ${env.REGION}", returnStatus: true)
-                    if (checkStack == 0) {
-                        // Update the stack if it exists
-                        echo "Updating existing stack..."
-                        sh "aws cloudformation update-stack --stack-name ${env.STACK_NAME} --template-body file://${templatePath} --parameters \
-                            ParameterKey=KeyName,ParameterValue=${KEY_NAME} \
-                            ParameterKey=InstanceType,ParameterValue=${INSTANCE_TYPE} \
-                            ParameterKey=ImageId,ParameterValue=${IMAGE_ID} \
-                            ParameterKey=SecurityGroupId,ParameterValue=${SECURITY_GROUP_ID} \
-                            ParameterKey=SubnetId,ParameterValue=${SUBNET_ID} \
-                            --capabilities CAPABILITY_NAMED_IAM --region ${env.REGION}"
-                    } else {
-                        // Create the stack if it does not exist
-                        echo "Creating new stack..."
-                        sh "aws cloudformation create-stack --stack-name ${env.STACK_NAME} --template-body file://${templatePath} --parameters \
-                            ParameterKey=KeyName,ParameterValue=${KEY_NAME} \
-                            ParameterKey=InstanceType,ParameterValue=${INSTANCE_TYPE} \
-                            ParameterKey=ImageId,ParameterValue=${IMAGE_ID} \
-                            ParameterKey=SecurityGroupId,ParameterValue=${SECURITY_GROUP_ID} \
-                            ParameterKey=SubnetId,ParameterValue=${SUBNET_ID} \
-                            --capabilities CAPABILITY_NAMED_IAM --region ${env.REGION}"
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding', 
+                        credentialsId: 'aws-creds', 
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
+                        // Build the full path to the master template file
+                        def templatePath = "${WORKSPACE}/master.yaml"
+                        // Check if the stack exists
+                        def describeOutput = sh(script: "aws cloudformation describe-stacks --stack-name ${env.STACK_NAME} --region ${env.REGION}", returnStdout: true, returnStatus: true)
+                        if (describeOutput == 0) {
+                            // Update the stack if it exists
+                            echo "Updating existing stack..."
+                            sh "aws cloudformation update-stack --stack-name ${env.STACK_NAME} --template-body file://${templatePath} --parameters ParameterKey=KeyName,ParameterValue=${KEY_NAME} ParameterKey=InstanceType,ParameterValue=${INSTANCE_TYPE} ParameterKey=ImageId,ParameterValue=${IMAGE_ID} ParameterKey=SecurityGroupId,ParameterValue=${SECURITY_GROUP_ID} ParameterKey=SubnetId,ParameterValue=${SUBNET_ID} --capabilities CAPABILITY_NAMED_IAM --region ${env.REGION}"
+                        } else {
+                            // Create the stack if it does not exist
+                            echo "Creating new stack..."
+                            sh "aws cloudformation create-stack --stack-name ${env.STACK_NAME} --template-body file://${templatePath} --parameters ParameterKey=KeyName,ParameterValue=${KEY_NAME} ParameterKey=InstanceType,ParameterValue=${INSTANCE_TYPE} ParameterKey=ImageId,ParameterValue=${IMAGE_ID} ParameterKey=SecurityGroupId,ParameterValue=${SECURITY_GROUP_ID} ParameterKey=SubnetId,ParameterValue=${SUBNET_ID} --capabilities CAPABILITY_NAMED_IAM --region ${env.REGION}"
+                        }
                     }
                 }
             }
