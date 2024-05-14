@@ -62,29 +62,31 @@ pipeline {
                         // Build the full path to the master template file
                         def templatePath = "${WORKSPACE}/master.yml"
                         // Check if the stack exists
-                        def describeOutput = sh(script: "aws cloudformation describe-stacks --stack-name ${env.STACK_NAME} --region ${env.AWS_REGION}", returnStdout: true, returnStatus: true)
+                        def describeOutput = sh(script: "aws cloudformation describe-stacks --stack-name ${env.STACK_NAME} --region ${env.AWS_REGION} --query 'Stacks[0].StackStatus' --output text", returnStdout: true, returnStatus: true).trim()
 
-                        if (describeOutput == 0) {
-                            // Update the stack if it exists
+                        if (describeOutput.contains("CREATE_COMPLETE") || describeOutput.contains("UPDATE_COMPLETE") || describeOutput.contains("UPDATE_ROLLBACK_COMPLETE")) {
+                            // Update the stack if it exists and is in a stable state
                             echo "Updating existing stack..."
-                            sh """
-                            aws cloudformation update-stack --stack-name ${env.STACK_NAME} \
-                            --template-body file://${WORKSPACE}/master.yml \
-                            --parameters \
-                                ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \
-                                ParameterKey=InstanceType,ParameterValue=${env.INSTANCE_TYPE} \
-                                ParameterKey=ImageId,ParameterValue=${env.IMAGE_ID} \
-                                ParameterKey=SecurityGroupId,ParameterValue=${env.SECURITY_GROUP_ID} \
-                                ParameterKey=SubnetId,ParameterValue=${env.SUBNET_ID} \
-                            --capabilities CAPABILITY_NAMED_IAM \
-                            --region ${env.AWS_REGION}
-                            """
-                     } else {
-                            // Create the stack if it does not exist
+                            def updateOutput = sh script: """
+                                aws cloudformation update-stack --stack-name ${env.STACK_NAME} \
+                                --template-body file://${templatePath} \
+                                --parameters \
+                                    ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \
+                                    ParameterKey=InstanceType,ParameterValue=${env.INSTANCE_TYPE} \
+                                    ParameterKey=ImageId,ParameterValue=${env.IMAGE_ID} \
+                                    ParameterKey=SecurityGroupId,ParameterValue=${env.SECURITY_GROUP_ID} \
+                                    ParameterKey=SubnetId,ParameterValue=${env.SUBNET_ID} \
+                                --capabilities CAPABILITY_NAMED_IAM \
+                                --region ${env.AWS_REGION} \
+                                --output text
+                                """, returnStdout: true
+                            echo "Update Stack Output: ${updateOutput}"
+                        } else {
+                            // Create the stack if it does not exist or is in a deletable state
                             echo "Creating new stack..."
-                            def output = sh script: """
-                                aws cloudformation create-stack --stack-name DEV-INFRASTRUCTURE \
-                                --template-body file://${WORKSPACE}/master.yml \
+                            def createOutput = sh script: """
+                                aws cloudformation create-stack --stack-name ${env.STACK_NAME} \
+                                --template-body file://${templatePath} \
                                 --parameters \
                                     ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \
                                     ParameterKey=InstanceType,ParameterValue=${env.INSTANCE_TYPE} \
@@ -95,12 +97,13 @@ pipeline {
                                 --region ${env.AWS_REGION} \
                                 --output text 2>&1
                                 """, returnStdout: true
-                            echo "CloudFormation command output: ${output}"
-                       }
+                            echo "Create Stack Output: ${createOutput}"
+                        }
                     } // Closing the withCredentials block
                 }
             }
         }
+
     }
     post {
         success {
