@@ -83,7 +83,7 @@ pipeline {
                             // Create the stack if it does not exist
                             echo "Creating new stack..."
                             sh """
-                            aws cloudformation create-stack --stack-name ${env.STACK_NAME} \
+                            aws cloudformation create-stack --stack-name DEV-INFRASTRUCTURE \
                             --template-body file://${WORKSPACE}/master.yml \
                             --parameters \
                                 ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \

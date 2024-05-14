@@ -1,15 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Master template to deploy EC2 and RDS resources.
 
-Resources:
-  EC2Stack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: "https://s3.ap-south-1.amazonaws.com/cft-templates-christianechica/cft-jenkins-demo/ec2.yaml"
-      Parameters:
-        KeyName: !Ref KeyName
-        InstanceType: !Ref InstanceType
-
 Parameters:
   KeyName:
     Description: EC2 KeyPair Name
@@ -20,7 +11,31 @@ Parameters:
     Type: String
     Default: "t3.micro"
 
+  SecurityGroupId:
+    Description: "ID of the Security Group"
+    Type: "AWS::EC2::SecurityGroup::Id"
+
+  ImageId:
+    Description: "AMI ID to use for the instance"
+    Type: "AWS::EC2::Image::Id"
+
+  SubnetId:
+    Description: "Subnet ID where the instance will be launched"
+    Type: "AWS::EC2::Subnet::Id"
+
+Resources:
+  EC2Stack:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: 'https://s3.ap-south-1.amazonaws.com/cft-templates-christianechica/cft-jenkins-demo/ec2.yaml'
+      Parameters:
+        KeyName: !Ref KeyName
+        InstanceType: !Ref InstanceType
+        ImageId: !Ref ImageId
+        SecurityGroupId: !Ref SecurityGroupId
+        SubnetId: !Ref SubnetId
+
 Outputs:
   EC2StackOutput:
-    Description: "The Stack ID of the EC2 stack"
-    Value: !Ref EC2Stack
+    Description: 'The Stack ID of the EC2 stack'
+    Value: !GetAtt EC2Stack.Outputs.StackId
