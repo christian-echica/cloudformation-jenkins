@@ -5,6 +5,14 @@ pipeline {
         AWS_DEFAULT_REGION = 'ap-south-1' // Set your AWS region here
     }
     stages {
+        stage('Verify Environment') {
+            steps {
+                script {
+                    sh "ls -la \${WORKSPACE}/"  // List all files in the workspace directory to check file presence
+                    sh "cat \${WORKSPACE}/master.yaml"  // Optionally, output the content of the master.yaml to verify its correctness
+                }
+            }
+        }    
         stage('Fetch Parameters') {
             steps {
                 script {
