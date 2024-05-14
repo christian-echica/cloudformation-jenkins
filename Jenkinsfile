@@ -39,7 +39,7 @@ pipeline {
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                     ]]) {
                         // Fetching all parameters including stack name and region
-                        env.REGION = sh(script: "aws ssm get-parameter --name 'Region' --with-decryption --query 'Parameter.Value' --output text", returnStdout: true).trim()
+                        env.AWS_REGION = sh(script: "aws ssm get-parameter --name 'Region' --with-decryption --query 'Parameter.Value' --output text", returnStdout: true).trim()
                         env.STACK_NAME = sh(script: "aws ssm get-parameter --name 'StackName' --with-decryption --query 'Parameter.Value' --output text", returnStdout: true).trim()
                         env.KEY_NAME = sh(script: "aws ssm get-parameter --name 'KeyName' --with-decryption --query 'Parameter.Value' --output text", returnStdout: true).trim()
                         env.INSTANCE_TYPE = sh(script: "aws ssm get-parameter --name 'InstanceType' --with-decryption --query 'Parameter.Value' --output text", returnStdout: true).trim()
