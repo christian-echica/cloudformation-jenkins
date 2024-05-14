@@ -82,18 +82,20 @@ pipeline {
                      } else {
                             // Create the stack if it does not exist
                             echo "Creating new stack..."
-                            sh """
-                            aws cloudformation create-stack --stack-name DEV-INFRASTRUCTURE \
-                            --template-body file://${WORKSPACE}/master.yml \
-                            --parameters \
-                                ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \
-                                ParameterKey=InstanceType,ParameterValue=${env.INSTANCE_TYPE} \
-                                ParameterKey=ImageId,ParameterValue=${env.IMAGE_ID} \
-                                ParameterKey=SecurityGroupId,ParameterValue=${env.SECURITY_GROUP_ID} \
-                                ParameterKey=SubnetId,ParameterValue=${env.SUBNET_ID} \
-                            --capabilities CAPABILITY_NAMED_IAM \
-                            --region ${env.AWS_REGION}
-                            """
+                            def output = sh script: """
+                                aws cloudformation create-stack --stack-name DEV-INFRASTRUCTURE \
+                                --template-body file://${WORKSPACE}/master.yml \
+                                --parameters \
+                                    ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \
+                                    ParameterKey=InstanceType,ParameterValue=${env.INSTANCE_TYPE} \
+                                    ParameterKey=ImageId,ParameterValue=${env.IMAGE_ID} \
+                                    ParameterKey=SecurityGroupId,ParameterValue=${env.SECURITY_GROUP_ID} \
+                                    ParameterKey=SubnetId,ParameterValue=${env.SUBNET_ID} \
+                                --capabilities CAPABILITY_NAMED_IAM \
+                                --region ${env.AWS_REGION} \
+                                --output text 2>&1
+                                """, returnStdout: true
+                            echo "CloudFormation command output: ${output}"
                        }
                     } // Closing the withCredentials block
                 }
