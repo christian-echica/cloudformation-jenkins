@@ -62,7 +62,8 @@ pipeline {
                         // Build the full path to the master template file
                         def templatePath = "${WORKSPACE}/master.yml"
                         // Check if the stack exists
-                        def describeOutput = sh(script: "aws cloudformation describe-stacks --stack-name ${env.STACK_NAME} --region ${env.REGION}", returnStdout: true, returnStatus: true)
+                        def describeOutput = sh(script: "aws cloudformation describe-stacks --stack-name ${env.STACK_NAME} --region ${env.AWS_REGION}", returnStdout: true, returnStatus: true)
+
                         if (describeOutput == 0) {
                             // Update the stack if it exists
                             echo "Updating existing stack..."
