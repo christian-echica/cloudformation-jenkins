@@ -68,25 +68,32 @@ pipeline {
                             echo "Updating existing stack..."
                             sh """
                             aws cloudformation update-stack --stack-name ${env.STACK_NAME} \
-                            --template-body file://\${WORKSPACE}/master.yml \
+                            --template-body file://${WORKSPACE}/master.yml \
                             --parameters \
-                                ParameterKey=KeyName,ParameterValue=\${env.KEY_NAME} \
-                                ParameterKey=InstanceType,ParameterValue=\${env.INSTANCE_TYPE} \
-                                ParameterKey=ImageId,ParameterValue=\${env.IMAGE_ID} \
-                                ParameterKey=SecurityGroupId,ParameterValue=\${env.SECURITY_GROUP_ID} \
-                                ParameterKey=SubnetId,ParameterValue=\${env.SUBNET_ID} \
+                                ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \
+                                ParameterKey=InstanceType,ParameterValue=${env.INSTANCE_TYPE} \
+                                ParameterKey=ImageId,ParameterValue=${env.IMAGE_ID} \
+                                ParameterKey=SecurityGroupId,ParameterValue=${env.SECURITY_GROUP_ID} \
+                                ParameterKey=SubnetId,ParameterValue=${env.SUBNET_ID} \
                             --capabilities CAPABILITY_NAMED_IAM \
-                            --region \${env.REGION}
-                            """                        } else {
+                            --region ${env.AWS_REGION}
+                            """
+                     } else {
                             // Create the stack if it does not exist
                             echo "Creating new stack..."
-                            sh "aws cloudformation create-stack --stack-name DEV-INFRASTRUCTURE --template-body file://${templatePath} --parameters \
-                            ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \
-                            ParameterKey=InstanceType,ParameterValue=${env.INSTANCE_TYPE} \
-                            ParameterKey=ImageId,ParameterValue=${env.IMAGE_ID} \
-                            ParameterKey=SecurityGroupId,ParameterValue=${env.SECURITY_GROUP_ID} \
-                            ParameterKey=SubnetId,ParameterValue=${env.SUBNET_ID} \
-                            --capabilities CAPABILITY_NAMED_IAM --region ${env.AWS_REGION}"                        }
+                            sh """
+                            aws cloudformation create-stack --stack-name ${env.STACK_NAME} \
+                            --template-body file://${WORKSPACE}/master.yml \
+                            --parameters \
+                                ParameterKey=KeyName,ParameterValue=${env.KEY_NAME} \
+                                ParameterKey=InstanceType,ParameterValue=${env.INSTANCE_TYPE} \
+                                ParameterKey=ImageId,ParameterValue=${env.IMAGE_ID} \
+                                ParameterKey=SecurityGroupId,ParameterValue=${env.SECURITY_GROUP_ID} \
+                                ParameterKey=SubnetId,ParameterValue=${env.SUBNET_ID} \
+                            --capabilities CAPABILITY_NAMED_IAM \
+                            --region ${env.AWS_REGION}
+                            """
+                       }
                     } // Closing the withCredentials block
                 }
             }
