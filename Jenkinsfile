@@ -9,7 +9,7 @@ pipeline {
             steps {
                 script {
                     sh "ls -la \${WORKSPACE}/"  // List all files in the workspace directory to check file presence
-                    sh "cat \${WORKSPACE}/master.yaml"  // Optionally, output the content of the master.yaml to verify its correctness
+                    sh "cat \${WORKSPACE}/master.yml"  // Optionally, output the content of the master.yaml to verify its correctness
                 }
             }
         }    
@@ -44,7 +44,7 @@ pipeline {
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                     ]]) {
                         // Build the full path to the master template file
-                        def templatePath = "${WORKSPACE}/master.yaml"
+                        def templatePath = "${WORKSPACE}/master.yml"
                         // Check if the stack exists
                         def describeOutput = sh(script: "aws cloudformation describe-stacks --stack-name ${env.STACK_NAME} --region ${env.REGION}", returnStdout: true, returnStatus: true)
                         if (describeOutput == 0) {
