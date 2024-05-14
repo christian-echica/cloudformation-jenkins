@@ -1,12 +1,6 @@
 pipeline {
     agent any
     stages {
-        stage('Clone Repository') {
-            steps {
-                // Cloning the repository from GitHub
-                git 'https://github.com/christian-echica/cloudformation-jenkins.git'
-            }
-        }
         stage('Fetch Parameters') {
             steps {
                 script {
