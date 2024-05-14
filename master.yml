@@ -5,7 +5,7 @@ Resources:
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub "file://${LocalPath}/ec2.yaml"
+      TemplateURL: !Sub "file://${LocalPath}/ec2.yml"
       Parameters:
         KeyName: !Ref KeyName
         InstanceType: !Ref InstanceType

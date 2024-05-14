@@ -5,6 +5,20 @@ pipeline {
         AWS_DEFAULT_REGION = 'ap-south-1' // Set your AWS region here
     }
     stages {
+        stage('Upload CloudFormation Templates to S3') {
+            steps {
+                script {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding', 
+                        credentialsId: 'aws-creds', 
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
+                        // Upload all .yml files in the workspace to S3
+                        sh "aws s3 cp ${WORKSPACE}/ ${S3_BUCKET_URI} --recursive --exclude '*' --include '*.yml'"
+                }
+            }
+        }    
         stage('Verify Environment') {
             steps {
                 script {
